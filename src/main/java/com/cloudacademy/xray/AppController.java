@@ -27,6 +27,7 @@ import com.amazonaws.xray.handlers.TracingHandler;
 public class AppController {
 
     /*Initiate the DynamoDB Client*/
+    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard().withRegion("eu-west-2").build();
 
     DynamoDB dynamoDB = new DynamoDB(client);
     String tableName = "employee_details";
@@ -37,7 +38,7 @@ public class AppController {
 
 
         /* Add the Begin Segment here for post method */
-
+	    Segment segment = AWSXRay.beginSegment("Inserting Data");
 
         Table table = dynamoDB.getTable(tableName);
         try {
@@ -68,13 +69,14 @@ public class AppController {
         } catch (RuntimeException e) {
 
             /* Add the Segment add exception here for post method */
+		    segment.addException(e);
             System.err.println("Something went wrong");
             System.err.println(e.getMessage());
 
 
         } finally {
             /* Add the end segment code here for post method */
-
+		    AWSXRay.endSegment();
         }
         return segment;
     }
@@ -83,6 +85,7 @@ public class AppController {
     public Segment get() {
 
         /* **Add the Begin Segment here for get method***/
+	    Segment segment = AWSXRay.beginSegment("Inserting Data");
 
         Table table = dynamoDB.getTable(tableName);
         try {
@@ -96,11 +99,13 @@ public class AppController {
         } catch (Exception e) {
 
             /* Add the Segment add exception here for get method */
-            System.err.println("get failed.");
+            segment.addException(e);
+		    System.err.println("get failed.");
             System.err.println(e.getMessage());
         } finally {
             /* Add the end segment code here for get method */
-        }
+		    AWSXRay.endSegment();
+	}
 
         return segment;
     }
