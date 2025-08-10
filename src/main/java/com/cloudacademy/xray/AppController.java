@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import com.amazonaws.xray.AWSXRay;
@@ -27,15 +28,19 @@ import java.util.stream.Collectors;
 public class AppController {
     private static final Logger logger = LoggerFactory.getLogger(AppController.class);
 
-    @Value("${aws.region}")
-    private String region;
+    private final AmazonDynamoDB client;
+    private final DynamoDB dynamoDB;
 
-    /*Initiate the DynamoDB Client*/
-    AmazonDynamoDB client = AmazonDynamoDBClientBuilder.standard()
-            .withRegion(region)
-            .build();
+    public AppController(@Value("${aws.region:}") String region) {
+        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
 
-    DynamoDB dynamoDB = new DynamoDB(client);
+        if (StringUtils.hasText(region)) {
+            builder = builder.withRegion(region);
+        }
+
+        this.client = builder.build();
+        this.dynamoDB = new DynamoDB(client);
+    }
 
     @Value("${dynamodb.table}")
     String tableName;
