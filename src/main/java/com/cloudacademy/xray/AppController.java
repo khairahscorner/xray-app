@@ -1,11 +1,9 @@
 package com.cloudacademy.xray;
 
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import com.amazonaws.xray.AWSXRay;
@@ -18,6 +16,7 @@ import com.amazonaws.xray.entities.Segment;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,22 +27,22 @@ import java.util.stream.Collectors;
 public class AppController {
     private static final Logger logger = LoggerFactory.getLogger(AppController.class);
 
-    private final AmazonDynamoDB client;
-    private final DynamoDB dynamoDB;
+    private AmazonDynamoDB client;
+    private DynamoDB dynamoDB;
 
-    public AppController(@Value("${aws.region:}") String region) {
-        AmazonDynamoDBClientBuilder builder = AmazonDynamoDBClientBuilder.standard();
-
-        if (StringUtils.hasText(region)) {
-            builder = builder.withRegion(region);
-        }
-
-        this.client = builder.build();
-        this.dynamoDB = new DynamoDB(client);
-    }
+    @Value("${aws.region}")
+    private String region;
 
     @Value("${dynamodb.table}")
     String tableName;
+
+    @PostConstruct
+    public void init() {
+        this.client = AmazonDynamoDBClientBuilder.standard()
+                .withRegion(region)
+                .build();
+        this.dynamoDB = new DynamoDB(client);
+    }
 
     @RequestMapping("/post")
     public List<Map<String, Object>> post() {
@@ -114,6 +113,7 @@ public class AppController {
                 logger.warn("Item with ID: {} not found.", id);
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No item found with ID: " + id);
             }
+            logger.info("Successfully fetched item with ID: {}", item.getString("ID"));
 
         } catch (Exception e) {
 
