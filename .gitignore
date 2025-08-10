@@ -20,7 +20,7 @@
 *.rar
 
 # Maven
-target/*
+target/
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
@@ -57,5 +57,5 @@ out/
 Thumbs.db
 
 # AWS / Environment configs
-application.properties
+**/application.properties
 application.yml
